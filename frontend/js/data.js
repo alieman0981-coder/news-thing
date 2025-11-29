@@ -18,19 +18,18 @@ const NT_LANGUAGES = [
 
 const NT_RTL_LANGS = ["ar", "ur"];
 
-// Countries
-// id = what the dropdown uses
-// regionKey = what we send to the backend / feeds.config (gulf, europe, americas, global)
+// Countries (ids MUST match backend region codes)
 const NT_COUNTRIES = [
-  { id: "saudi", label: "Saudi Arabia", regionKey: "gulf" },
-  { id: "uae", label: "United Arab Emirates", regionKey: "gulf" },
-  { id: "qatar", label: "Qatar", regionKey: "gulf" },
-  { id: "usa", label: "United States", regionKey: "americas" },
-  { id: "uk", label: "United Kingdom", regionKey: "europe" },
-  { id: "europe", label: "Europe (General)", regionKey: "europe" }
+  { id: "saudi", label: "Saudi Arabia" },
+  { id: "uae", label: "United Arab Emirates" },
+  { id: "qatar", label: "Qatar" },
+  { id: "usa", label: "United States" },
+  { id: "uk", label: "United Kingdom" },
+  { id: "europe", label: "Europe (General)" },
+  { id: "global", label: "Global feed" } // optional extra, maps to backend "global"
 ];
 
-// Categories
+// Categories (ids MUST match backend category keys)
 const NT_CATEGORIES = [
   { id: "top", label: "Top stories" },
   { id: "events", label: "Events & things happening" },
@@ -59,23 +58,20 @@ const NT_LEVELS = [
   { level: 2, label: "Bold" }
 ];
 
-// Legacy country → region map (kept for compatibility, same info as regionKey)
+// Old simple map (kept for compatibility if needed later)
 const NT_COUNTRY_REGION = {
-  saudi: "gulf",
-  uae: "gulf",
-  qatar: "gulf",
-  uk: "europe",
+  saudi: "saudi",
+  uae: "uae",
+  qatar: "qatar",
+  uk: "uk",
   europe: "europe",
-  usa: "americas"
+  usa: "usa",
+  global: "global"
 };
 
-// Helper: get backend region key for a given country id
+// Helper: currently just returns the same id (so we don’t break app.js if it calls this)
 function ntGetRegionKeyForCountry(countryId) {
-  const c = NT_COUNTRIES.find(c => c.id === countryId);
-  if (c && c.regionKey) return c.regionKey;
-  // fallback to legacy map
-  if (NT_COUNTRY_REGION[countryId]) return NT_COUNTRY_REGION[countryId];
-  return "global";
+  return NT_COUNTRY_REGION[countryId] || countryId || "global";
 }
 
 // Fallback curated topics (shortened example)
