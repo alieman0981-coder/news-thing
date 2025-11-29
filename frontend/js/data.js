@@ -1,4 +1,4 @@
-// FULL data.js for NEWS THING — Ready to use
+// FULL data.js for NEWS THING — basic, easy to extend
 
 // Interface languages
 const NT_LANGUAGES = [
@@ -18,7 +18,7 @@ const NT_LANGUAGES = [
 
 const NT_RTL_LANGS = ["ar", "ur"];
 
-// Countries (ids MUST match backend region codes)
+// Countries – IDs MUST match backend region keys in feeds.config.js
 const NT_COUNTRIES = [
   { id: "saudi", label: "Saudi Arabia" },
   { id: "uae", label: "United Arab Emirates" },
@@ -26,10 +26,10 @@ const NT_COUNTRIES = [
   { id: "usa", label: "United States" },
   { id: "uk", label: "United Kingdom" },
   { id: "europe", label: "Europe (General)" },
-  { id: "global", label: "Global feed" } // optional extra, maps to backend "global"
+  { id: "global", label: "Global mix" } // optional, if you add a "global" section
 ];
 
-// Categories (ids MUST match backend category keys)
+// Categories – IDs MUST match category keys in feeds.config.js
 const NT_CATEGORIES = [
   { id: "top", label: "Top stories" },
   { id: "events", label: "Events & things happening" },
@@ -48,33 +48,31 @@ const NT_CATEGORIES = [
   { id: "donald_trump", label: "Donald Trump" }
 ];
 
-// Scenarios
+// Scenarios & levels – used for icebreaker tone, easy to extend
 const NT_SCENARIOS = ["event", "school", "family", "online"];
 
-// Levels
 const NT_LEVELS = [
   { level: 0, label: "Ultra-safe" },
   { level: 1, label: "Easy" },
   { level: 2, label: "Bold" }
 ];
 
-// Old simple map (kept for compatibility if needed later)
+// Simple mapping helper – currently 1:1 but you can change later
 const NT_COUNTRY_REGION = {
   saudi: "saudi",
   uae: "uae",
   qatar: "qatar",
+  usa: "usa",
   uk: "uk",
   europe: "europe",
-  usa: "usa",
   global: "global"
 };
 
-// Helper: currently just returns the same id (so we don’t break app.js if it calls this)
 function ntGetRegionKeyForCountry(countryId) {
   return NT_COUNTRY_REGION[countryId] || countryId || "global";
 }
 
-// Fallback curated topics (shortened example)
+// Minimal fallback topics (you can expand later)
 const NT_TOPICS = [
   {
     id: "ai_everywhere",
@@ -98,7 +96,7 @@ const NT_TOPICS = [
   }
 ];
 
-// Playbook
+// Soft skills playbook – you can add more cards here
 const NT_PLAYBOOK = [
   {
     id: "be_interested",
@@ -108,7 +106,7 @@ const NT_PLAYBOOK = [
   }
 ];
 
-// Panic lines
+// Panic lines if the card feels dead
 const NT_ICEPACKS_BY_LANG = {
   en: [
     "What's something you've been quietly obsessed with recently?",
