@@ -79,8 +79,14 @@ function populateDropdowns() {
 
 // ----- Backend -----
 async function fetchStack(countryId, categoryId) {
+  // map selected country to backend region key (gulf, europe, americas, global)
+  const regionKey =
+    typeof ntGetRegionKeyForCountry === "function"
+      ? ntGetRegionKeyForCountry(countryId)
+      : countryId;
+
   const url = new URL("/api/news", apiBase);
-  url.searchParams.set("region", countryId);
+  url.searchParams.set("region", regionKey);
   url.searchParams.set("category", categoryId);
 
   const res = await fetch(url.toString());
@@ -88,6 +94,7 @@ async function fetchStack(countryId, categoryId) {
   const data = await res.json();
   return Array.isArray(data.articles) ? data.articles : [];
 }
+
 
 // ----- Icebreakers -----
 function buildIcebreaker(article, lang) {
