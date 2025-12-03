@@ -1,31 +1,45 @@
+// server.js — Express API for NEWS THING
+
 const express = require("express");
 const cors = require("cors");
-const { fetchArticles } = require("./src/rssFetcher");
-
-const PORT = process.env.PORT || 4000;
+const { fetchNewsFor } = require("./rssFetcher");
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+const PORT = process.env.PORT || 3001;
 
-app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, message: "NEWS THING backend is running." });
+// CORS: allow your Netlify domain in production
+app.use(
+  cors({
+    origin: "*"
+  })
+);
+
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, ts: new Date().toISOString() });
 });
 
 app.get("/api/news", async (req, res) => {
-  const region = (req.query.region || "global").toString();
-  const category = (req.query.category || "top").toString();
-  const lang = (req.query.lang || "en").toString();
+  const region = (req.query.region || "usa").toLowerCase();
+  const category = (req.query.category || "top").toLowerCase();
 
   try {
-    const articles = await fetchArticles(region, category, 24);
-    res.json({ region, category, lang, articles });
+    const articles = await fetchNewsFor(region, category);
+    res.json({
+      region,
+      category,
+      count: articles.length,
+      articles
+    });
   } catch (err) {
-    console.error("Error in /api/news", err);
-    res.status(500).json({ error: "Failed to fetch news" });
+    console.error("API /api/news error", err);
+    res.status(500).json({
+      error: "Failed to fetch news",
+      region,
+      category
+    });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`NEWS THING backend listening on port ${PORT}`);
+  console.log(`NEWS THING backend running on port ${PORT}`);
 });

@@ -2,261 +2,453 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NEWS THING · Small talk, solved.</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-
-  <link rel="stylesheet" href="css/style.css" />
+  <title>NEWS THING – Small talk, solved.</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="NEWS THING turns live headlines and trends from your country into swipeable conversation cards so you never run out of things to say."
+  />
+  <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
-  <div id="app-root">
-    <!-- Landing screen -->
-    <section id="landing-screen" class="screen active-screen">
-      <header class="nt-header">
-        <div class="nt-logo">NEWS<span>THING</span></div>
-      </header>
-      <main class="landing-main">
-        <div class="landing-copy">
-          <p class="landing-kicker">Conversation helper · Live small-talk radar</p>
+  <header class="nt-header">
+    <div class="nt-header-inner">
+      <a href="/" class="nt-logo">
+        <span class="nt-logo-news">NEWS</span><span class="nt-logo-thing">THING</span>
+        <span class="nt-logo-beta">beta</span>
+      </a>
+      <nav class="nt-nav">
+        <a href="/about.html" class="nt-nav-link">About / FAQ</a>
+        <button id="nt-lang-toggle" class="nt-nav-button" type="button" aria-label="Change language">
+          🌐
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="nt-main">
+    <!-- HERO SECTION -->
+    <section class="nt-section nt-hero" id="hero">
+      <div class="nt-hero-inner">
+        <div class="nt-hero-text">
           <h1>Small talk, solved.</h1>
-          <h2 class="landing-subtitle">Never run out of things to say again.</h2>
-          <p class="landing-text">
-            NEWS THING turns live headlines and local trends into
-            conversation cards with ready-made icebreakers in your language.
+          <p class="nt-hero-sub">
+            Never run out of things to say again.
           </p>
-
-          <ul class="landing-list">
-            <li><span>1</span>Choose your country, vibe and how bold you want to be.</li>
-            <li><span>2</span>We scan your feeds and build two stacks: news + social.</li>
-            <li><span>3</span>Each card gives you a topic, context and an icebreaker line.</li>
-          </ul>
-
-          <div class="landing-actions">
-            <button id="btn-start" class="nt-btn primary">Get started</button>
-            <button id="btn-skip-to-feed" class="nt-btn ghost">Skip straight to cards</button>
+          <p class="nt-hero-body">
+            NEWS THING pulls live headlines and social trends from your country and turns them into swipeable
+            conversation cards. You pick where you are and the vibe — we help you say the right thing at the right time.
+          </p>
+          <div class="nt-hero-actions">
+            <button id="btn-hero-start" class="nt-btn nt-btn-primary">Get started</button>
+            <button id="btn-hero-examples" class="nt-btn nt-btn-ghost">See examples</button>
           </div>
-
-          <p class="landing-softnote">
-            Perfect for events, family gatherings, school, conferences and “I have to talk to people” days.
+          <p class="nt-hero-note">
+            Works for events, school, family dinners, online chats — anywhere you need quick, natural ideas.
           </p>
+          <!-- Ad slot placeholder -->
+          <div class="nt-ad nt-ad-hero">
+            <!-- AdSense: place responsive unit here later -->
+          </div>
         </div>
 
-        <div class="landing-preview-column">
-          <div class="landing-preview-card">
-            <div class="preview-pill">Sample card · Live trend</div>
-            <div class="preview-tags">
-              <span>Saudi Arabia</span>
-              <span>New trends</span>
-              <span>Easy level</span>
-            </div>
-            <h3>Everyone is talking about AI tools</h3>
-            <p class="preview-summary">
-              People are sliding AI into school, work and even gossip.
-              Most are still figuring out how they actually feel about it.
+        <div class="nt-hero-preview">
+          <h2 class="nt-section-title-small">Live global preview</h2>
+          <p class="nt-hero-preview-text">
+            Here’s what a real NEWS THING card might look like using today’s global stories. Your actual stacks
+            will be personalized to your country.
+          </p>
+          <div class="nt-card-stack-preview">
+            <div class="nt-card-preview nt-card-preview-back"></div>
+            <div class="nt-card-preview nt-card-preview-mid"></div>
+            <article class="nt-card-preview nt-card-preview-front" id="global-preview-card">
+              <div class="nt-card-top">
+                <div class="nt-card-meta">
+                  <span class="nt-card-source" id="gp-source">Loading source…</span>
+                  <span class="nt-card-dot">•</span>
+                  <span class="nt-card-time" id="gp-time">Just now</span>
+                </div>
+                <div class="nt-safety-badge nt-safety-2" id="gp-safety">2</div>
+              </div>
+              <h3 class="nt-card-title" id="gp-title">
+                We’re lining up a topic for you…
+              </h3>
+              <p class="nt-card-summary" id="gp-summary">
+                NEWS THING pulls recent, real headlines and turns them into clean conversation cards like this one.
+              </p>
+              <div class="ai-caution" id="gp-ai-caution" style="display:none;">
+                AI can be a sensitive topic — feel the other person’s vibe first and keep it light.
+              </div>
+              <div class="nt-card-icebreaker">
+                <span class="nt-card-ice-label">You could say:</span>
+                <p class="nt-card-ice-text" id="gp-ice">
+                  “Have you seen what everyone is talking about today? It’s kind of everywhere.”
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="nt-section nt-how" id="how">
+      <div class="nt-section-inner">
+        <h2 class="nt-section-title">How NEWS THING works</h2>
+        <div class="nt-how-grid">
+          <div class="nt-how-step">
+            <div class="nt-step-number">1</div>
+            <h3>You tell us your country.</h3>
+            <p>
+              Every country has different trending topics. Pick where you are so we can pull accurate local headlines
+              and social trends.
             </p>
-            <div class="preview-meta">
-              <span>Social vibe · Tech / daily life</span>
-            </div>
-            <div class="preview-ice">
-              <div class="ice-label">Icebreaker</div>
-              <p>“Have you tried any AI tools that actually made your life easier?”</p>
-            </div>
-            <div class="preview-followups">
-              <span>“Do you use AI more for school or just for fun?”</span>
-              <span>“Does it make life easier or more confusing for you?”</span>
-            </div>
           </div>
-
-          <div class="landing-strip">
-            <div>
-              <strong>Small talk, soft.</strong>
-              <span>We keep it light, safe and non-cringey by default.</span>
-            </div>
-            <div class="landing-strip-pill">Multi-language · Local feeds · Icebreakers</div>
+          <div class="nt-how-step">
+            <div class="nt-step-number">2</div>
+            <h3>We fetch live sources.</h3>
+            <p>
+              We collect real-time stories from curated outlets — news, sports, fashion, and culture — so your topics
+              are actually current.
+            </p>
+          </div>
+          <div class="nt-how-step">
+            <div class="nt-step-number">3</div>
+            <h3>We turn them into cards.</h3>
+            <p>
+              Each card shows a short summary, a 1–3 safety level, and a natural icebreaker you can actually say.
+            </p>
+          </div>
+          <div class="nt-how-step">
+            <div class="nt-step-number">4</div>
+            <h3>You swipe until something feels right.</h3>
+            <p>
+              Swipe through news and social cards until you find a topic that fits the moment. If it feels off, hit
+              Panic for a safe backup question.
+            </p>
           </div>
         </div>
-      </main>
-      <footer class="nt-footer">
-        <span>NEWS THING · built for “I don’t know what to say” moments.</span>
-      </footer>
+      </div>
     </section>
 
-    <!-- Selection screen -->
-    <section id="selection-screen" class="screen">
-      <header class="nt-header">
-        <div class="nt-logo clickable" id="logo-back-to-landing">NEWS<span>THING</span></div>
-      </header>
-      <main class="selection-main">
-        <h2>Set your radar</h2>
-        <p class="selection-sub">
-          Pick your country, card language, and what kind of topics you want.
-          We’ll build two stacks: one for harder news and one for softer, social topics.
+    <!-- SCENARIOS -->
+    <section class="nt-section nt-scenarios" id="scenarios">
+      <div class="nt-section-inner">
+        <h2 class="nt-section-title">Built for real-life situations</h2>
+        <p class="nt-section-lead">
+          Not just “ask about their hobbies”. NEWS THING adapts to where you are and who you’re with.
         </p>
-
-        <form id="selection-form" class="selection-form">
-          <div class="form-row">
-            <label for="sel-country">Country</label>
-            <select id="sel-country" required></select>
-          </div>
-
-          <div class="form-row">
-            <label for="sel-lang">Language on cards</label>
-            <select id="sel-lang" required></select>
-          </div>
-
-          <div class="form-row inline-row">
-            <div>
-              <label for="sel-news-cat">News stack category</label>
-              <select id="sel-news-cat" required></select>
-            </div>
-            <div>
-              <label for="sel-social-cat">Social stack category</label>
-              <select id="sel-social-cat" required></select>
-            </div>
-          </div>
-
-          <div class="form-row inline-row">
-            <div>
-              <label for="sel-scenario">Where are you using this?</label>
-              <select id="sel-scenario">
-                <option value="event">Event / party</option>
-                <option value="school">School / uni</option>
-                <option value="family">Family gathering</option>
-                <option value="online">Online / DMs</option>
-              </select>
-            </div>
-            <div>
-              <label for="sel-level">How bold do you want to be?</label>
-              <select id="sel-level">
-                <option value="0">Ultra-safe</option>
-                <option value="1" selected>Easy</option>
-                <option value="2">Bold</option>
-              </select>
-            </div>
-          </div>
-
-          <button type="submit" class="nt-btn primary full">Build my feed</button>
-        </form>
-      </main>
+        <div class="nt-scenario-grid">
+          <article class="nt-scenario-card">
+            <h3>Events & meetups</h3>
+            <p>
+              Light, friendly openers that don’t feel awkward when you barely know the person.
+            </p>
+            <p class="nt-scenario-example">
+              “Have you seen what everyone’s saying about <span>[topic]</span>? It’s everywhere today.”
+            </p>
+          </article>
+          <article class="nt-scenario-card">
+            <h3>School & uni</h3>
+            <p>
+              Casual topics that don’t feel too serious or cringe in the hallway or cafeteria.
+            </p>
+            <p class="nt-scenario-example">
+              “People in my class were talking about <span>[topic]</span>. Does that come up in your school too?”
+            </p>
+          </article>
+          <article class="nt-scenario-card">
+            <h3>Family gatherings</h3>
+            <p>
+              Soft, safe ideas that won’t start unnecessary drama at dinner.
+            </p>
+            <p class="nt-scenario-example">
+              “I saw something about <span>[topic]</span> happening recently. What do you think about it?”
+            </p>
+          </article>
+          <article class="nt-scenario-card">
+            <h3>Online chats</h3>
+            <p>
+              Dropable lines for DMs, Discord, or streak chats without sounding like a news anchor.
+            </p>
+            <p class="nt-scenario-example">
+              “Everyone keeps posting about <span>[topic]</span> today. Have you seen it yet?”
+            </p>
+          </article>
+        </div>
+      </div>
     </section>
 
-    <!-- Cards screen -->
-    <section id="cards-screen" class="screen">
-      <header class="nt-header">
-        <div class="nt-logo clickable" id="logo-back-to-selection">NEWS<span>THING</span></div>
-        <div class="header-controls">
-          <button id="btn-refresh" class="nt-btn ghost small">Refresh</button>
-        </div>
-      </header>
-
-      <main class="cards-main">
-        <aside class="cards-sidebar">
-          <div class="sidebar-block">
-            <h3>Your setup</h3>
-            <div id="profile-summary" class="profile-summary"></div>
+    <!-- PICK YOUR WORLD (MAP) -->
+    <section class="nt-section nt-world" id="world">
+      <div class="nt-section-inner">
+        <h2 class="nt-section-title">Pick your world</h2>
+        <p class="nt-section-lead">
+          Every country has its own mix of categories and sources. Tap a pin to see what people are talking about there.
+        </p>
+        <div class="nt-world-layout">
+          <div class="nt-world-map-wrapper">
+            <div class="nt-world-map">
+              <!-- Pins -->
+              <button class="nt-world-pin" data-country="usa" style="top: 38%; left: 18%;" aria-label="United States"></button>
+              <button class="nt-world-pin" data-country="canada" style="top: 28%; left: 20%;" aria-label="Canada"></button>
+              <button class="nt-world-pin" data-country="uk" style="top: 32%; left: 36%;" aria-label="United Kingdom"></button>
+              <button class="nt-world-pin" data-country="germany" style="top: 35%; left: 40%;" aria-label="Germany"></button>
+              <button class="nt-world-pin" data-country="switzerland" style="top: 38%; left: 39%;" aria-label="Switzerland"></button>
+              <button class="nt-world-pin" data-country="finland" style="top: 26%; left: 43%;" aria-label="Finland"></button>
+              <button class="nt-world-pin" data-country="saudi_arabia" style="top: 45%; left: 46%;" aria-label="Saudi Arabia"></button>
+              <button class="nt-world-pin" data-country="uae" style="top: 48%; left: 49%;" aria-label="United Arab Emirates"></button>
+              <button class="nt-world-pin" data-country="australia" style="top: 70%; left: 68%;" aria-label="Australia"></button>
+            </div>
           </div>
-          <div class="sidebar-block">
-            <h3>Soft skills playbook</h3>
-            <ul id="playbook-list" class="playbook-list"></ul>
+          <div class="nt-world-detail" id="world-detail">
+            <h3 id="world-detail-name">Tap a pin to explore a country</h3>
+            <p id="world-detail-text">
+              You’ll see the categories we support in that country and can jump straight into building your stacks.
+            </p>
+            <div class="nt-world-chips" id="world-detail-cats">
+              <!-- Filled by JS -->
+            </div>
+            <div class="nt-world-actions">
+              <button id="btn-use-country" class="nt-btn nt-btn-primary" disabled>Use this country</button>
+              <button id="btn-open-country-page" class="nt-btn nt-btn-ghost" disabled>Open country page</button>
+            </div>
           </div>
-        </aside>
-
-        <div class="cards-stacks">
-          <!-- News stack -->
-          <section class="stack-section">
-            <div class="stack-header">
-              <div>
-                <h2>News cards</h2>
-                <p class="stack-sub">Grounded, real-world topics.</p>
-              </div>
-              <span id="news-count" class="stack-count"></span>
-            </div>
-            <div class="card-wrapper">
-              <div id="news-card" class="nt-card swipe-card" data-stack="news">
-                <div class="card-top-row">
-                  <div class="card-pill">News</div>
-                  <div class="card-tags">
-                    <span class="tag tag-country"></span>
-                    <span class="tag tag-category"></span>
-                  </div>
-                </div>
-                <h3 class="card-title"></h3>
-                <p class="card-summary"></p>
-                <div class="card-meta">
-                  <span class="card-source"></span>
-                  <a href="#" class="card-link" target="_blank" rel="noopener">Open article ↗</a>
-                </div>
-                <div class="card-icebreaker">
-                  <div class="ice-label">Icebreaker</div>
-                  <p class="ice-text"></p>
-                </div>
-                <div class="card-ice-followups">
-                  <button class="nt-chip" data-followup="0"></button>
-                  <button class="nt-chip" data-followup="1"></button>
-                </div>
-              </div>
-            </div>
-            <div class="card-controls">
-              <button class="nt-btn ghost" id="news-prev">◀ Prev</button>
-              <div id="news-index-display" class="index-display">1 / 1</div>
-              <button class="nt-btn ghost" id="news-next">Next ▶</button>
-            </div>
-          </section>
-
-          <!-- Social stack -->
-          <section class="stack-section">
-            <div class="stack-header">
-              <div>
-                <h2>Social cards</h2>
-                <p class="stack-sub">Lighter, “talk-about-able” topics.</p>
-              </div>
-              <span id="social-count" class="stack-count"></span>
-            </div>
-            <div class="card-wrapper">
-              <div id="social-card" class="nt-card swipe-card" data-stack="social">
-                <div class="card-top-row">
-                  <div class="card-pill social-pill">Social</div>
-                  <div class="card-tags">
-                    <span class="tag tag-country"></span>
-                    <span class="tag tag-category"></span>
-                  </div>
-                </div>
-                <h3 class="card-title"></h3>
-                <p class="card-summary"></p>
-                <div class="card-meta">
-                  <span class="card-source"></span>
-                  <a href="#" class="card-link" target="_blank" rel="noopener">Open article ↗</a>
-                </div>
-                <div class="card-icebreaker">
-                  <div class="ice-label">Icebreaker</div>
-                  <p class="ice-text"></p>
-                </div>
-                <div class="card-ice-followups">
-                  <button class="nt-chip" data-followup="0"></button>
-                  <button class="nt-chip" data-followup="1"></button>
-                </div>
-              </div>
-            </div>
-            <div class="card-controls">
-              <button class="nt-btn ghost" id="social-prev">◀ Prev</button>
-              <div id="social-index-display" class="index-display">1 / 1</div>
-              <button class="nt-btn ghost" id="social-next">Next ▶</button>
-            </div>
-          </section>
         </div>
-      </main>
-
-      <footer class="nt-footer">
-        <span id="footer-lang-label"></span>
-      </footer>
+        <!-- Ad slot under world section -->
+        <div class="nt-ad nt-ad-world">
+          <!-- AdSense: place responsive unit here later -->
+        </div>
+      </div>
     </section>
+
+    <!-- SAFETY LEVELS -->
+    <section class="nt-section nt-safety" id="safety">
+      <div class="nt-section-inner">
+        <h2 class="nt-section-title">Why we show a safety level</h2>
+        <p class="nt-section-lead">
+          Some topics are friendly and fun. Some can get deep. We don’t hide the news from you — we just help you read the room.
+        </p>
+        <div class="nt-safety-grid">
+          <div class="nt-safety-card">
+            <div class="nt-safety-badge nt-safety-1">1</div>
+            <h3>Green – Safe</h3>
+            <p>
+              Light topics like fashion, local events, trends, equestrian, skiing, and normal everyday stories.
+            </p>
+          </div>
+          <div class="nt-safety-card">
+            <div class="nt-safety-badge nt-safety-2">2</div>
+            <h3>Orange – Normal</h3>
+            <p>
+              Everyday politics, business, AI, royal family, sports, and finance that most people can talk about calmly.
+            </p>
+          </div>
+          <div class="nt-safety-card">
+            <div class="nt-safety-badge nt-safety-3">3</div>
+            <h3>Red – Careful</h3>
+            <p>
+              Sensitive or intense topics. We avoid very dark stories and nudge you to feel the other person’s vibe first.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANIC BUTTON SECTION -->
+    <section class="nt-section nt-panic" id="panic-info">
+      <div class="nt-section-inner nt-section-inner-narrow">
+        <h2 class="nt-section-title">Emergency backup? Hit Panic.</h2>
+        <p class="nt-section-lead">
+          If the conversation drops or feels weird, tap the Panic button to get a simple, safe question you can ask anyone.
+        </p>
+        <ul class="nt-panic-list">
+          <li>“What’s something you’ve been quietly obsessed with recently?”</li>
+          <li>“What’s the best thing that happened to you this week?”</li>
+          <li>“If today had a title, what would you call it?”</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ABOUT / FAQ TEASER -->
+    <section class="nt-section nt-about-teaser">
+      <div class="nt-section-inner nt-section-inner-narrow">
+        <h2 class="nt-section-title">Want to know more about NEWS THING?</h2>
+        <p class="nt-section-lead">
+          Learn how we choose sources, compute safety levels, and build conversation stacks in our About / FAQ section.
+        </p>
+        <a href="/about.html" class="nt-btn nt-btn-primary">Read About / FAQ</a>
+      </div>
+    </section>
+
+    <!-- SELECTION + STACKS (APP CORE) -->
+    <section class="nt-section nt-app" id="app">
+      <div class="nt-section-inner">
+        <h2 class="nt-section-title">Build your stacks</h2>
+        <p class="nt-section-lead">
+          Choose your country and categories, then swipe through live conversation cards.
+        </p>
+        <div class="nt-app-layout">
+          <!-- LEFT: SELECTION -->
+          <div class="nt-selection-panel">
+            <h3 class="nt-panel-title">Your setup</h3>
+            <form id="nt-selection-form">
+              <label class="nt-field">
+                <span>Country</span>
+                <select id="sel-country" required></select>
+              </label>
+
+              <label class="nt-field">
+                <span>News stack category</span>
+                <select id="sel-news-cat" required></select>
+              </label>
+
+              <label class="nt-field">
+                <span>Social stack category</span>
+                <select id="sel-social-cat" required></select>
+              </label>
+
+              <label class="nt-field">
+                <span>Scenario (optional)</span>
+                <div class="nt-pill-row" id="scenario-row">
+                  <!-- Filled by JS -->
+                </div>
+              </label>
+
+              <button type="submit" class="nt-btn nt-btn-primary nt-btn-block" id="btn-build">
+                Build my stacks
+              </button>
+            </form>
+            <p class="nt-selection-note">
+              You can always come back here and change your setup without losing your place.
+            </p>
+          </div>
+
+          <!-- RIGHT: STACKS -->
+          <div class="nt-stacks-panel" id="stacks-panel">
+            <div class="nt-stacks-header">
+              <button id="btn-back-selection" class="nt-btn nt-btn-ghost small" type="button">
+                ← Change setup
+              </button>
+              <div class="nt-stacks-summary" id="stacks-summary"></div>
+              <button id="btn-panic" class="nt-btn nt-btn-ghost small" type="button">
+                Panic
+              </button>
+            </div>
+
+            <div class="nt-stacks-columns">
+              <!-- News stack column -->
+              <div class="nt-stack-col">
+                <h3 class="nt-stack-title">News stack</h3>
+                <div class="nt-stack-status" id="news-stack-status">No cards yet.</div>
+                <div class="nt-card-shell">
+                  <article class="nt-card" id="news-card">
+                    <div class="nt-card-top">
+                      <div class="nt-card-meta">
+                        <span class="nt-card-source" id="news-source"></span>
+                        <span class="nt-card-dot">•</span>
+                        <span class="nt-card-time" id="news-time"></span>
+                      </div>
+                      <div class="nt-safety-badge" id="news-safety"></div>
+                    </div>
+                    <h3 class="nt-card-title" id="news-title"></h3>
+                    <p class="nt-card-summary" id="news-summary"></p>
+                    <div class="ai-caution" id="news-ai-warning" style="display:none;"></div>
+                    <div class="nt-card-icebreaker">
+                      <span class="nt-card-ice-label">You could say:</span>
+                      <p class="nt-card-ice-text" id="news-ice"></p>
+                    </div>
+                    <a class="nt-card-link" id="news-link" href="#" target="_blank" rel="noopener">Open story ↗</a>
+                  </article>
+                  <div class="nt-card-controls">
+                    <button class="nt-btn nt-btn-ghost small" id="news-prev">⟵ Back</button>
+                    <span class="nt-card-counter" id="news-counter">0 / 0</span>
+                    <button class="nt-btn nt-btn-primary small" id="news-next">Next ⟶</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Social stack column -->
+              <div class="nt-stack-col">
+                <h3 class="nt-stack-title">Social stack</h3>
+                <div class="nt-stack-status" id="social-stack-status">No cards yet.</div>
+                <div class="nt-card-shell">
+                  <article class="nt-card" id="social-card">
+                    <div class="nt-card-top">
+                      <div class="nt-card-meta">
+                        <span class="nt-card-source" id="social-source"></span>
+                        <span class="nt-card-dot">•</span>
+                        <span class="nt-card-time" id="social-time"></span>
+                      </div>
+                      <div class="nt-safety-badge" id="social-safety"></div>
+                    </div>
+                    <h3 class="nt-card-title" id="social-title"></h3>
+                    <p class="nt-card-summary" id="social-summary"></p>
+                    <div class="ai-caution" id="social-ai-warning" style="display:none;"></div>
+                    <div class="nt-card-icebreaker">
+                      <span class="nt-card-ice-label">You could say:</span>
+                      <p class="nt-card-ice-text" id="social-ice"></p>
+                    </div>
+                    <a class="nt-card-link" id="social-link" href="#" target="_blank" rel="noopener">Open story ↗</a>
+                  </article>
+                  <div class="nt-card-controls">
+                    <button class="nt-btn nt-btn-ghost small" id="social-prev">⟵ Back</button>
+                    <span class="nt-card-counter" id="social-counter">0 / 0</span>
+                    <button class="nt-btn nt-btn-primary small" id="social-next">Next ⟶</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ad slot under stacks -->
+            <div class="nt-ad nt-ad-stacks">
+              <!-- AdSense: place responsive unit here later -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- PANIC MODAL -->
+  <div id="panic-modal" class="nt-modal" aria-hidden="true">
+    <div class="nt-modal-backdrop"></div>
+    <div class="nt-modal-body">
+      <h3>Backup topic</h3>
+      <p id="panic-text">
+        What’s something you’ve been quietly obsessed with recently?
+      </p>
+      <div class="nt-modal-actions">
+        <button id="panic-next" class="nt-btn nt-btn-ghost small" type="button">Another idea</button>
+        <button id="panic-close" class="nt-btn nt-btn-primary small" type="button">Got it</button>
+      </div>
+    </div>
   </div>
 
-  <script src="js/config.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/app.js" defer></script>
+  <footer class="nt-footer">
+    <div class="nt-footer-inner">
+      <p class="nt-footer-brand">
+        <span class="nt-logo-news">NEWS</span><span class="nt-logo-thing">THING</span>
+      </p>
+      <p class="nt-footer-text">
+        NEWS THING summarizes public news sources into conversation cards. Always think for yourself and double-check anything important.
+      </p>
+      <p class="nt-footer-links">
+        <a href="mailto:hello@newsthing.app">hello@newsthing.app</a>
+        <span>·</span>
+        <a href="/about.html">About / FAQ</a>
+        <span>·</span>
+        <span>Privacy</span>
+        <span>·</span>
+        <span>Terms</span>
+      </p>
+      <p class="nt-footer-lang" id="footer-lang">
+        Interface language: English
+      </p>
+    </div>
+  </footer>
+
+  <script src="./js/data.js"></script>
+  <script src="./js/app.js"></script>
 </body>
 </html>
