@@ -4,12 +4,9 @@
   <meta charset="UTF-8" />
   <title>NEWS THING – Build your stacks</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta
-    name="description"
-    content="Build your NEWS THING stacks: choose your country and categories, then swipe through live conversation cards."
-  />
+  <meta name="description" content="Build your NEWS THING stacks. Swipe through live conversation cards." />
 
-  <!-- AdSense global script -->
+  <!-- AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1961643851266303"
           crossorigin="anonymous"></script>
 
@@ -29,17 +26,15 @@
   </header>
 
   <main class="nt-main">
-    <section class="nt-section nt-app" id="app">
+    <section class="nt-section nt-app">
       <div class="nt-section-inner">
         <h1 class="nt-section-title">Build your stacks</h1>
-        <p class="nt-section-lead">
-          Choose your country and categories, then swipe through live cards for news and social topics.
-        </p>
+        <p class="nt-section-lead">Pick a country + two categories, then swipe through your News stack and Social stack.</p>
 
         <div class="nt-app-layout">
-          <!-- LEFT: SELECTION -->
           <div class="nt-selection-panel">
             <h3 class="nt-panel-title">Your setup</h3>
+
             <form id="nt-selection-form">
               <label class="nt-field">
                 <span>Country</span>
@@ -58,141 +53,109 @@
 
               <label class="nt-field">
                 <span>Scenario (optional)</span>
-                <div class="nt-pill-row" id="scenario-row">
-                  <!-- Filled by JS -->
-                </div>
+                <div class="nt-pill-row" id="scenario-row"></div>
               </label>
 
-              <button type="submit" class="nt-btn nt-btn-primary nt-btn-block" id="btn-build">
-                Build my stacks
-              </button>
+              <button class="nt-btn nt-btn-primary nt-btn-block" type="submit">Build my stacks</button>
             </form>
-            <p class="nt-selection-note">
-              You can always come back and change this without losing the idea of how to talk.
-            </p>
 
-            <!-- Selection-side ad -->
-            <div class="nt-ad nt-ad-sidebar">
-              Ad space
-            </div>
+            <div class="nt-ad nt-ad-sidebar">Ad space</div>
           </div>
 
-          <!-- RIGHT: STACKS -->
-          <div class="nt-stacks-panel" id="stacks-panel">
+          <div class="nt-stacks-panel">
             <div class="nt-stacks-header">
-              <button onclick="window.location.href='./index.html'" class="nt-btn nt-btn-ghost small" type="button">
-                ← Back to landing
-              </button>
+              <button class="nt-btn nt-btn-ghost small" type="button" onclick="location.href='./index.html'">← Back</button>
               <div class="nt-stacks-summary" id="stacks-summary"></div>
-              <button id="btn-panic" class="nt-btn nt-btn-ghost small" type="button">
-                Panic
-              </button>
+              <button class="nt-btn nt-btn-ghost small" type="button" id="btn-panic">Panic</button>
             </div>
 
             <div class="nt-stacks-columns">
-              <!-- News stack -->
-              <div class="nt-stack-col">
+              <div>
                 <h3 class="nt-stack-title">News stack</h3>
-                <div class="nt-stack-status" id="news-stack-status">No cards yet. Pick your setup and build.</div>
+                <div class="nt-stack-status" id="news-stack-status">No cards yet.</div>
+
                 <div class="nt-card-shell">
                   <article class="nt-card" id="news-card">
                     <div class="nt-card-top">
                       <div class="nt-card-meta">
-                        <span class="nt-card-source" id="news-source"></span>
-                        <span class="nt-card-dot">•</span>
-                        <span class="nt-card-time" id="news-time"></span>
+                        <span id="news-source"></span><span class="nt-card-dot">•</span><span id="news-time"></span>
                       </div>
-                      <div class="nt-safety-badge" id="news-safety"></div>
+                      <div class="nt-safety-badge nt-safety-2" id="news-safety">2</div>
                     </div>
+
                     <h3 class="nt-card-title" id="news-title"></h3>
                     <p class="nt-card-summary" id="news-summary"></p>
+
                     <div class="ai-caution" id="news-ai-warning" style="display:none;"></div>
+
                     <div class="nt-card-icebreaker">
                       <span class="nt-card-ice-label">You could say:</span>
                       <p class="nt-card-ice-text" id="news-ice"></p>
                     </div>
-                    <a class="nt-card-link" id="news-link" href="#" target="_blank" rel="noopener">Open story ↗</a>
+
+                    <a class="nt-card-link" id="news-link" target="_blank" rel="noopener">Open story ↗</a>
                   </article>
+
                   <div class="nt-card-controls">
-                    <button class="nt-btn nt-btn-ghost small" id="news-prev">⟵ Back</button>
                     <span class="nt-card-counter" id="news-counter">0 / 0</span>
-                    <button class="nt-btn nt-btn-primary small" id="news-next">Next ⟶</button>
+                    <span class="nt-card-hint">Swipe or tap to move</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Social stack -->
-              <div class="nt-stack-col">
+              <div>
                 <h3 class="nt-stack-title">Social stack</h3>
                 <div class="nt-stack-status" id="social-stack-status">No cards yet.</div>
+
                 <div class="nt-card-shell">
                   <article class="nt-card" id="social-card">
                     <div class="nt-card-top">
                       <div class="nt-card-meta">
-                        <span class="nt-card-source" id="social-source"></span>
-                        <span class="nt-card-dot">•</span>
-                        <span class="nt-card-time" id="social-time"></span>
+                        <span id="social-source"></span><span class="nt-card-dot">•</span><span id="social-time"></span>
                       </div>
-                      <div class="nt-safety-badge" id="social-safety"></div>
+                      <div class="nt-safety-badge nt-safety-2" id="social-safety">2</div>
                     </div>
+
                     <h3 class="nt-card-title" id="social-title"></h3>
                     <p class="nt-card-summary" id="social-summary"></p>
+
                     <div class="ai-caution" id="social-ai-warning" style="display:none;"></div>
+
                     <div class="nt-card-icebreaker">
                       <span class="nt-card-ice-label">You could say:</span>
                       <p class="nt-card-ice-text" id="social-ice"></p>
                     </div>
-                    <a class="nt-card-link" id="social-link" href="#" target="_blank" rel="noopener">Open story ↗</a>
+
+                    <a class="nt-card-link" id="social-link" target="_blank" rel="noopener">Open story ↗</a>
                   </article>
+
                   <div class="nt-card-controls">
-                    <button class="nt-btn nt-btn-ghost small" id="social-prev">⟵ Back</button>
                     <span class="nt-card-counter" id="social-counter">0 / 0</span>
-                    <button class="nt-btn nt-btn-primary small" id="social-next">Next ⟶</button>
+                    <span class="nt-card-hint">Swipe or tap to move</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Ad under stacks -->
-            <div class="nt-ad nt-ad-stacks">
-              Ad space
-            </div>
+            <div class="nt-ad nt-ad-stacks">Ad space</div>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- PANIC MODAL -->
+  <!-- Panic Modal -->
   <div id="panic-modal" class="nt-modal" aria-hidden="true">
     <div class="nt-modal-backdrop"></div>
     <div class="nt-modal-body">
-      <h3>Backup topic</h3>
-      <p id="panic-text">
-        What’s something you’ve been quietly obsessed with recently?
-      </p>
+      <h3 style="margin:0 0 8px">Backup topic</h3>
+      <p id="panic-text" style="margin:0;color:var(--muted);font-weight:800;line-height:1.5"></p>
       <div class="nt-modal-actions">
-        <button id="panic-next" class="nt-btn nt-btn-ghost small" type="button">Another idea</button>
-        <button id="panic-close" class="nt-btn nt-btn-primary small" type="button">Got it</button>
+        <button id="panic-next" class="nt-btn nt-btn-ghost small" type="button">Another</button>
+        <button id="panic-close" class="nt-btn nt-btn-primary small" type="button">Close</button>
       </div>
     </div>
   </div>
-
-  <footer class="nt-footer">
-    <div class="nt-footer-inner">
-      <p class="nt-footer-brand">
-        <span class="nt-logo-news">NEWS</span><span class="nt-logo-thing">THING</span>
-      </p>
-      <p class="nt-footer-text">
-        NEWS THING summarizes public news sources into conversation cards. Always double-check anything important.
-      </p>
-      <p class="nt-footer-links">
-        <a href="mailto:hello@newsthing.app">hello@newsthing.app</a>
-        <span>·</span>
-        <a href="./about.html">About / FAQ</a>
-      </p>
-    </div>
-  </footer>
 
   <script src="./js/data.js"></script>
   <script src="./js/app.js"></script>

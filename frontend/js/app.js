@@ -1,641 +1,521 @@
-// app.js — NEWS THING main logic
+// app.js — handles landing + app page
 
-// Adjust this if needed
-const apiBase = window.NT_API_BASE || "https://news-thing.onrender.com";
+const NT_API_BASE = window.NT_API_BASE || "https://news-thing.onrender.com";
 
-const state = {
-  language: "en",
-  country: "usa",
-  newsCategory: "top",
-  socialCategory: "trends",
-  scenario: null,
-  newsStack: [],
-  socialStack: [],
-  newsIndex: 0,
-  socialIndex: 0,
-  selectedMapCountry: null
-};
-
-function qs(sel) {
-  return document.querySelector(sel);
-}
-function qsa(sel) {
-  return Array.from(document.querySelectorAll(sel));
-}
-
-/* ---------- SAFETY + ICEBREAKER LOGIC ---------- */
-
-function scoreSafety(article, categoryId) {
-  // Base by category
-  let risk = 1;
-
-  const medCats = [
-    "sports",
-    "nba",
-    "stocks",
-    "economies",
-    "economics",
-    "finance",
-    "royal_family",
-    "celebrities",
-    "media",
-    "education"
-  ];
-  const highCats = ["politics"];
-
-  if (medCats.includes(categoryId)) risk = 2;
-  if (highCats.includes(categoryId)) risk = 2; // bumped later by keywords
-
-  const text = ((article.title || "") + " " + (article.description || "")).toLowerCase();
-  const redWords = [
-    "war",
-    "killed",
-    "death",
-    "dead",
-    "shooting",
-    "attack",
-    "bomb",
-    "explosion",
-    "crash",
-    "disaster",
-    "suicide",
-    "genocide",
-    "massacre",
-    "riot",
-    "protest",
-    "crisis",
-    "recession",
-    "corruption",
-    "scandal",
-    "laid off",
-    "layoff"
-  ];
-
-  let hasRedWord = redWords.some((w) => text.includes(w));
-
-  if (hasRedWord) {
-    risk = Math.min(3, risk + 1);
-  }
-
-  return risk;
-}
-
-function isAiRelated(article) {
-  const t = ((article.title || "") + " " + (article.description || "")).toLowerCase();
-  return (
-    t.includes(" ai ") ||
-    t.startsWith("ai ") ||
-    t.includes("artificial intelligence") ||
-    t.includes("chatgpt") ||
-    t.includes("gpt-") ||
-    t.includes("openai")
-  );
-}
-
-function pickIcebreaker(article, scenarioId) {
-  const title = article.title || "";
-  const baseTopic =
-    title.length > 0
-      ? title
-      : article.description?.slice(0, 80) || "something that’s been trending";
-
-  const safeTopic = baseTopic.replace(/\s+/g, " ").trim();
-
-  const prefix = (() => {
-    switch (scenarioId) {
-      case "school":
-        return "People in my class keep mentioning";
-      case "family":
-        return "I saw something about";
-      case "online":
-        return "Everyone online keeps talking about";
-      case "event":
-      default:
-        return "I keep seeing headlines about";
-    }
-  })();
-
-  const endingOptions = [
-    "Have you seen anything about it?",
-    "What do you think about it?",
-    "Do you feel like people are overreacting or not talking about it enough?",
-    "Does it come up much around you?"
-  ];
-
-  const ending = endingOptions[Math.floor(Math.random() * endingOptions.length)];
-
-  return `${prefix} ${safeTopic.endsWith(".") ? safeTopic.slice(0, -1) : safeTopic}. ${ending}`;
-}
-
-/* ---------- FETCH HELPERS ---------- */
-
-async function fetchNews(region, category) {
-  try {
-    const url = new URL("/api/news", apiBase);
-    url.searchParams.set("region", region);
-    url.searchParams.set("category", category);
-    const res = await fetch(url.toString());
-    if (!res.ok) throw new Error("Failed to fetch news");
-    const data = await res.json();
-    return Array.isArray(data.articles) ? data.articles : [];
-  } catch (err) {
-    console.error("fetchNews error", err);
-    return [];
-  }
-}
-
-function enrichArticles(articles, categoryId) {
-  return (articles || []).map((a) => {
-    const safety = scoreSafety(a, categoryId);
-    return {
-      ...a,
-      _safety: safety,
-      _category: categoryId,
-      _ai: isAiRelated(a)
-    };
-  });
-}
-
-/* ---------- STACK RENDERING ---------- */
-
-function formatTimeAgo(pubDate) {
-  if (!pubDate) return "Just now";
-  const d = new Date(pubDate);
-  if (Number.isNaN(d.getTime())) return "Recently";
+// ---------- helpers ----------
+function timeAgo(dateString) {
+  if (!dateString) return "Just now";
+  const d = new Date(dateString);
+  if (isNaN(d.getTime())) return "Just now";
   const diffMs = Date.now() - d.getTime();
-  const mins = Math.round(diffMs / 60000);
+  const mins = Math.floor(diffMs / 60000);
   if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins} min ago`;
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs} h ago`;
-  const days = Math.round(hrs / 24);
+  if (mins < 60) return `${mins} min${mins === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} h ago`;
+  const days = Math.floor(hours / 24);
   return `${days} d ago`;
 }
 
-function renderStackCard(type) {
-  const stack = type === "news" ? state.newsStack : state.socialStack;
-  const index = type === "news" ? state.newsIndex : state.socialIndex;
-
-  const cardEl = qs(`#${type}-card`);
-  const statusEl = qs(`#${type}-stack-status`);
-  const counterEl = qs(`#${type}-counter`);
-  const sourceEl = qs(`#${type}-source`);
-  const timeEl = qs(`#${type}-time`);
-  const titleEl = qs(`#${type}-title`);
-  const summaryEl = qs(`#${type}-summary`);
-  const linkEl = qs(`#${type}-link`);
-  const safetyEl = qs(`#${type}-safety`);
-  const aiEl = qs(`#${type}-ai-warning`);
-
-  if (!cardEl || !statusEl) return;
-
-  if (!stack.length) {
-    statusEl.textContent = "No cards yet. Choose your setup and tap “Build my stacks”.";
-    cardEl.style.visibility = "hidden";
-    if (counterEl) counterEl.textContent = "0 / 0";
-    return;
-  }
-
-  statusEl.textContent = "";
-  cardEl.style.visibility = "visible";
-
-  const clampedIndex = Math.min(Math.max(index, 0), stack.length - 1);
-  if (type === "news") state.newsIndex = clampedIndex;
-  else state.socialIndex = clampedIndex;
-
-  const a = stack[clampedIndex];
-
-  if (counterEl) counterEl.textContent = `${clampedIndex + 1} / ${stack.length}`;
-  if (sourceEl) sourceEl.textContent = a.sourceName || "Source";
-  if (timeEl) timeEl.textContent = formatTimeAgo(a.pubDate);
-  if (titleEl) titleEl.textContent = a.title || "Untitled story";
-  if (summaryEl)
-    summaryEl.textContent = a.description
-      ? a.description.replace(/<\/?[^>]+(>|$)/g, "")
-      : "Short summary unavailable — you can still use the headline.";
-  if (linkEl) linkEl.href = a.url || "#";
-
-  if (safetyEl) {
-    safetyEl.textContent = a._safety || 1;
-    safetyEl.className = "nt-safety-badge";
-    if (a._safety === 1) safetyEl.classList.add("nt-safety-1");
-    else if (a._safety === 2) safetyEl.classList.add("nt-safety-2");
-    else safetyEl.classList.add("nt-safety-3");
-  }
-
-  if (aiEl) {
-    if (a._ai) {
-      aiEl.style.display = "block";
-      aiEl.textContent =
-        "AI can be a sensitive topic — feel the other person’s vibe first and keep it light.";
-    } else {
-      aiEl.style.display = "none";
-    }
-  }
-
-  const scenarioId = state.scenario || "event";
-  const ice = pickIcebreaker(a, scenarioId);
-  const iceEl = qs(`#${type}-ice`);
-  if (iceEl) iceEl.textContent = ice;
+function clampText(str, maxChars) {
+  const s = (str || "").replace(/\s+/g, " ").trim();
+  if (s.length <= maxChars) return s;
+  return s.slice(0, Math.max(0, maxChars - 1)).trim() + "…";
 }
 
-function renderStacksSummary() {
-  const el = qs("#stacks-summary");
-  if (!el) return;
-
-  const country = NT_COUNTRIES.find((c) => c.id === state.country);
-  const newsCat = NT_CATEGORIES.find((c) => c.id === state.newsCategory);
-  const socialCat = NT_CATEGORIES.find((c) => c.id === state.socialCategory);
-  const scenario = NT_SCENARIOS.find((s) => s.id === state.scenario);
-
-  const parts = [];
-  if (country) parts.push(country.label);
-  if (newsCat && socialCat) parts.push(`News: ${newsCat.label} · Social: ${socialCat.label}`);
-  if (scenario) parts.push(`Scenario: ${scenario.label}`);
-
-  el.textContent = parts.join(" · ");
+function isAiRelated(article) {
+  const text = ((article.title || "") + " " + (article.description || "")).toLowerCase();
+  return (
+    text.includes("artificial intelligence") ||
+    text.includes("machine learning") ||
+    text.includes("openai") ||
+    text.includes("chatgpt") ||
+    /\bgpt-?\d\b/.test(text) ||
+    /\bai\b/.test(text)
+  );
 }
 
-/* ---------- PANIC MODAL ---------- */
+// SAFETY: politics OR killing/war => 3
+function computeSafety(category, article) {
+  const cat = (category || "").toLowerCase();
+  const text = ((article.title || "") + " " + (article.description || "")).toLowerCase();
 
-function pickPanicLine(lang) {
-  const list = NT_ICEPACKS_BY_LANG[lang] || NT_ICEPACKS_BY_LANG.en || [];
-  if (!list.length) return "Ask them how their week has been so far.";
-  const idx = Math.floor(Math.random() * list.length);
-  return list[idx];
+  // category hard rules
+  if (cat.includes("politic")) return 3;
+  if (cat === "donald_trump") return 3;
+
+  // keyword hard rules
+  const killWords = ["killed","killing","dead","death","murder","shot","shooting","massacre","slain"];
+  const warWords  = ["war","invasion","airstrike","bomb","missile","attack","terror","hostage","genocide","conflict"];
+  if (killWords.some(w => text.includes(w)) || warWords.some(w => text.includes(w))) return 3;
+
+  // light/medium
+  const easyCats = ["events","fashion","equestrian","skiing","weather","entertainment","trends","royal_family","polo"];
+  if (easyCats.includes(cat)) return 1;
+
+  const mediumCats = ["sports","nba","stocks","economies","economics","finance","media","education","football","celebrities","hockey"];
+  if (mediumCats.includes(cat)) return 2;
+
+  return 2;
 }
 
-function initPanicModal() {
-  const modal = qs("#panic-modal");
-  const panicBtn = qs("#btn-panic");
-  const panicText = qs("#panic-text");
-  const panicNext = qs("#panic-next");
-  const panicClose = qs("#panic-close");
-
-  if (!modal || !panicBtn || !panicText || !panicNext || !panicClose) return;
-
-  function openModal() {
-    panicText.textContent = pickPanicLine(state.language);
-    modal.setAttribute("aria-hidden", "false");
-  }
-  function closeModal() {
-    modal.setAttribute("aria-hidden", "true");
-  }
-
-  panicBtn.addEventListener("click", openModal);
-  panicNext.addEventListener("click", () => {
-    panicText.textContent = pickPanicLine(state.language);
-  });
-  panicClose.addEventListener("click", closeModal);
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal || e.target.classList.contains("nt-modal-backdrop")) {
-      closeModal();
-    }
-  });
+function safetyClass(level) {
+  if (level === 1) return "nt-safety-1";
+  if (level === 3) return "nt-safety-3";
+  return "nt-safety-2";
 }
 
-/* ---------- WORLD MAP ---------- */
+function scenarioLabel(s) {
+  if (!s) return "";
+  if (s === "event") return "at an event";
+  if (s === "school") return "at school";
+  if (s === "family") return "with family";
+  if (s === "online") return "online";
+  return s;
+}
 
-function populateWorldDetail(countryId) {
-  const detailName = qs("#world-detail-name");
-  const detailText = qs("#world-detail-text");
-  const detailCats = qs("#world-detail-cats");
-  const useBtn = qs("#btn-use-country");
-  const openBtn = qs("#btn-open-country-page");
-  const country = NT_COUNTRIES.find((c) => c.id === countryId);
+// Varied icebreakers (not repetitive)
+const ICEBREAKER_TEMPLATES = [
+  (t, s) => `“Have you seen this? ${t}”`,
+  (t, s) => `“I keep seeing this everywhere — ${t}. What do you think?”`,
+  (t, s) => `“Quick question: ${t}. Have you heard about it?”`,
+  (t, s) => `“This is kind of interesting: ${t}. Does it sound real to you?”`,
+  (t, s) => `“People are talking about ${t}. Are you following it at all?”`,
+  (t, s) => `“Random but… ${t}. What’s your take?”`,
+  (t, s) => `“I’m curious — ${t}. Would you bring this up or skip it?”`,
+  (t, s) => `“Okay I need your opinion: ${t}.”`,
+  (t, s) => `“Someone mentioned this ${s ? scenarioLabel(s) : ""}: ${t}. Have you seen it?”`.replace(/\s+/g," ").trim(),
+  (t, s) => `“I’m trying to keep up with what’s trending — ${t}. Is it a big thing?”`
+];
 
-  if (!country || !detailName || !detailText || !detailCats || !useBtn || !openBtn) return;
+function pickIcebreaker(article, scenario) {
+  const title = clampText(article.title || "this", 92);
+  const fn = ICEBREAKER_TEMPLATES[Math.floor(Math.random() * ICEBREAKER_TEMPLATES.length)];
+  return fn(title, scenario);
+}
 
-  state.selectedMapCountry = countryId;
+// ---------- slide deck logic ----------
+function resetAnim(card) {
+  card.classList.remove("slide-out-left","slide-out-right","slide-in-left","slide-in-right","slide-in-active");
+}
 
-  detailName.textContent = country.label;
+function slide(card, direction, renderFn) {
+  const outClass = direction > 0 ? "slide-out-left" : "slide-out-right";
+  const inStart  = direction > 0 ? "slide-in-right" : "slide-in-left";
 
-  const catsIds = NT_COUNTRY_CATEGORY_MAP[countryId] || [];
-  const catLabels = catsIds
-    .map((cid) => NT_CATEGORIES.find((c) => c.id === cid))
-    .filter(Boolean)
-    .map((c) => c.label);
+  resetAnim(card);
+  card.classList.add(outClass);
 
-  detailText.textContent =
-    catLabels.length > 0
-      ? `We track topics like ${catLabels.join(" · ")} for ${country.label}.`
-      : `We’re still wiring categories for ${country.label}.`;
+  setTimeout(() => {
+    resetAnim(card);
+    card.classList.add(inStart);
+    renderFn();
+    requestAnimationFrame(() => {
+      card.classList.add("slide-in-active");
+      setTimeout(() => resetAnim(card), 220);
+    });
+  }, 200);
+}
 
-  detailCats.innerHTML = "";
-  catLabels.forEach((label) => {
-    const chip = document.createElement("span");
-    chip.className = "nt-chip";
-    chip.textContent = label;
-    detailCats.appendChild(chip);
+function attachSwipe(card, onNext, onPrev) {
+  let startX = 0, startY = 0;
+  let active = false;
+
+  const threshold = 18; // easy swipe
+
+  card.addEventListener("touchstart", (e) => {
+    active = true;
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+  }, { passive: true });
+
+  card.addEventListener("touchend", (e) => {
+    if (!active) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    active = false;
+
+    if (Math.abs(dy) > Math.abs(dx)) return; // ignore vertical
+    if (Math.abs(dx) < threshold) { onNext(); return; }
+    if (dx < 0) onNext(); else onPrev();
   });
 
-  useBtn.disabled = false;
-  openBtn.disabled = false;
+  // Desktop drag
+  let down = false;
+  card.addEventListener("mousedown", (e) => { down = true; startX = e.clientX; startY = e.clientY; });
+  window.addEventListener("mouseup", (e) => {
+    if (!down) return;
+    down = false;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (Math.abs(dy) > Math.abs(dx)) return;
+    if (Math.abs(dx) < threshold) { onNext(); return; }
+    if (dx < 0) onNext(); else onPrev();
+  });
 
-  useBtn.onclick = () => {
-    const sel = qs("#sel-country");
-    if (sel) {
-      sel.value = countryId;
-      state.country = countryId;
-      filterCategoriesForCountry(countryId);
-    }
-    document.getElementById("app").scrollIntoView({ behavior: "smooth" });
-  };
-
-  openBtn.onclick = () => {
-    const sel = qs("#sel-country");
-    if (sel) {
-      sel.value = countryId;
-      state.country = countryId;
-      filterCategoriesForCountry(countryId);
-    }
-    document.getElementById("app").scrollIntoView({ behavior: "smooth" });
-  };
+  // Tap/click -> next (fast)
+  card.addEventListener("click", () => onNext());
 }
 
-function initWorldMap() {
-  const pins = qsa(".nt-world-pin");
+// ---------- landing: world map detail ----------
+function setupWorldMap() {
+  const pins = document.querySelectorAll(".nt-world-pin");
+  const nameEl = document.getElementById("world-detail-name");
+  const catsEl = document.getElementById("world-detail-cats");
+  const btnUse = document.getElementById("btn-use-country");
+  const btnOpen = document.getElementById("btn-open-country-page");
+  if (!pins.length || !nameEl || !catsEl || !btnUse || !btnOpen) return;
+
+  let chosen = null;
+
   pins.forEach((pin) => {
     pin.addEventListener("click", () => {
-      const c = pin.getAttribute("data-country");
-      if (c) populateWorldDetail(c);
+      const id = pin.dataset.country;
+      const cfg = (typeof NT_COUNTRY_CONFIG !== "undefined") ? NT_COUNTRY_CONFIG[id] : null;
+      if (!cfg) return;
+      chosen = id;
+
+      nameEl.textContent = cfg.label;
+      catsEl.innerHTML = "";
+
+      const set = new Set([...(cfg.newsCats||[]), ...(cfg.socialCats||[])]);
+      [...set].forEach((c) => {
+        const chip = document.createElement("span");
+        chip.className = "nt-chip";
+        chip.textContent = (NT_CATEGORY_LABELS && NT_CATEGORY_LABELS[c]) ? NT_CATEGORY_LABELS[c] : c.replace(/_/g," ");
+        catsEl.appendChild(chip);
+      });
+
+      btnUse.disabled = false;
+      btnUse.onclick = () => location.href = `./app.html?country=${encodeURIComponent(id)}`;
+      btnOpen.href = `./app.html?country=${encodeURIComponent(id)}`;
     });
   });
 }
 
-/* ---------- SELECTION ---------- */
+// ---------- landing: rotating preview stack ----------
+let gStack = [];
+let gIndex = 0;
 
-function populateDropdowns() {
-  const countrySel = qs("#sel-country");
-  const newsSel = qs("#sel-news-cat");
-  const socialSel = qs("#sel-social-cat");
+function renderGlobal() {
+  const card = document.getElementById("global-card");
+  if (!card) return;
 
-  if (!countrySel || !newsSel || !socialSel) return;
+  const a = gStack[gIndex];
+  if (!a) return;
 
-  countrySel.innerHTML = "";
-  NT_COUNTRIES.forEach((c) => {
-    const opt = document.createElement("option");
-    opt.value = c.id;
-    opt.textContent = c.label;
-    countrySel.appendChild(opt);
-  });
+  const source = document.getElementById("g-source");
+  const time = document.getElementById("g-time");
+  const title = document.getElementById("g-title");
+  const summary = document.getElementById("g-summary");
+  const safety = document.getElementById("g-safety");
+  const ice = document.getElementById("g-ice");
+  const ai = document.getElementById("g-ai");
+  const counter = document.getElementById("g-counter");
 
-  countrySel.value = state.country;
+  const level = computeSafety(a._category || "top", a);
+  const isAI = isAiRelated(a);
 
-  filterCategoriesForCountry(state.country);
+  source.textContent = a.sourceName || "Source";
+  time.textContent = timeAgo(a.pubDate);
+  title.textContent = clampText(a.title, 120);
+  summary.textContent = clampText(a.description, 320);
+
+  safety.textContent = String(level);
+  safety.classList.remove("nt-safety-1","nt-safety-2","nt-safety-3");
+  safety.classList.add(safetyClass(level));
+
+  ice.textContent = pickIcebreaker(a, "event");
+  ai.style.display = isAI ? "block" : "none";
+  counter.textContent = `${gIndex + 1} / ${gStack.length}`;
 }
 
-function filterCategoriesForCountry(countryId) {
-  const allowed = NT_COUNTRY_CATEGORY_MAP[countryId];
-  const newsSel = qs("#sel-news-cat");
-  const socialSel = qs("#sel-social-cat");
-  if (!newsSel || !socialSel) return;
-
-  const currentNews = state.newsCategory;
-  const currentSocial = state.socialCategory;
-
-  function rebuildSelect(selectEl, isNews) {
-    selectEl.innerHTML = "";
-    const all = NT_CATEGORIES || [];
-    all.forEach((cat) => {
-      if (Array.isArray(allowed) && !allowed.includes(cat.id)) return;
-      const opt = document.createElement("option");
-      opt.value = cat.id;
-      opt.textContent = cat.label;
-      selectEl.appendChild(opt);
-    });
-    if (selectEl.options.length > 0) {
-      const prev = isNews ? currentNews : currentSocial;
-      if (prev && allowed && allowed.includes(prev)) {
-        selectEl.value = prev;
-      } else {
-        selectEl.selectedIndex = 0;
-      }
-    }
-  }
-
-  rebuildSelect(newsSel, true);
-  rebuildSelect(socialSel, false);
-
-  state.newsCategory = newsSel.value;
-  state.socialCategory = socialSel.value;
-}
-
-function initScenarioPills() {
-  const row = qs("#scenario-row");
-  if (!row) return;
-  row.innerHTML = "";
-
-  NT_SCENARIOS.forEach((s) => {
-    const pill = document.createElement("button");
-    pill.type = "button";
-    pill.className = "nt-pill";
-    pill.textContent = s.label;
-    pill.dataset.id = s.id;
-    pill.addEventListener("click", () => {
-      if (state.scenario === s.id) {
-        state.scenario = null;
-      } else {
-        state.scenario = s.id;
-      }
-      qsa(".nt-pill").forEach((p) => p.classList.remove("active"));
-      if (state.scenario) pill.classList.add("active");
-    });
-    row.appendChild(pill);
-  });
-}
-
-/* ---------- GLOBAL PREVIEW ---------- */
-
-async function initGlobalPreview() {
-  const sourceEl = qs("#gp-source");
-  const timeEl = qs("#gp-time");
-  const titleEl = qs("#gp-title");
-  const summaryEl = qs("#gp-summary");
-  const safetyEl = qs("#gp-safety");
-  const iceEl = qs("#gp-ice");
-  const aiEl = qs("#gp-ai-caution");
+async function loadGlobalPreview() {
+  const card = document.getElementById("global-card");
+  if (!card) return;
 
   try {
-    const articles = await fetchNews("usa", "top");
-    if (!articles.length) return;
+    const res = await fetch(`${NT_API_BASE}/api/news?region=usa&category=top`);
+    const json = await res.json();
+    gStack = (json.articles || []).slice(0, 12).map(a => ({...a, _category:"top"}));
+    gIndex = 0;
 
-    const enriched = enrichArticles(articles, "top");
-    const first = enriched[0];
+    renderGlobal();
 
-    if (sourceEl) sourceEl.textContent = first.sourceName || "Global source";
-    if (timeEl) timeEl.textContent = formatTimeAgo(first.pubDate);
-    if (titleEl) titleEl.textContent = first.title || "Live global topic";
-    if (summaryEl)
-      summaryEl.textContent =
-        first.description?.replace(/<\/?[^>]+(>|$)/g, "") ||
-        "A current story that people may be chatting about.";
-
-    if (safetyEl) {
-      safetyEl.textContent = first._safety || 2;
-      safetyEl.className = "nt-safety-badge";
-      safetyEl.classList.add(
-        first._safety === 1 ? "nt-safety-1" : first._safety === 2 ? "nt-safety-2" : "nt-safety-3"
-      );
-    }
-
-    if (aiEl) {
-      if (first._ai) {
-        aiEl.style.display = "block";
-        aiEl.textContent =
-          "AI can be a sensitive topic — feel the other person’s vibe first and keep it light.";
-      } else {
-        aiEl.style.display = "none";
+    attachSwipe(
+      card,
+      () => { // next
+        if (!gStack.length) return;
+        gIndex = (gIndex + 1) % gStack.length;
+        slide(card, +1, renderGlobal);
+      },
+      () => { // prev
+        if (!gStack.length) return;
+        gIndex = (gIndex - 1 + gStack.length) % gStack.length;
+        slide(card, -1, renderGlobal);
       }
+    );
+
+    // auto-rotate every 6s (feels like a real stack)
+    setInterval(() => {
+      if (!gStack.length) return;
+      gIndex = (gIndex + 1) % gStack.length;
+      slide(card, +1, renderGlobal);
+    }, 6000);
+
+  } catch (e) {
+    console.error("Global preview failed", e);
+  }
+}
+
+// ---------- app page stacks ----------
+let currentScenario = null;
+
+let newsStack = [], newsIndex = 0;
+let socialStack = [], socialIndex = 0;
+
+function setupPanic() {
+  const btn = document.getElementById("btn-panic");
+  const modal = document.getElementById("panic-modal");
+  if (!btn || !modal) return;
+
+  const txt = document.getElementById("panic-text");
+  const close = document.getElementById("panic-close");
+  const next = document.getElementById("panic-next");
+  const back = modal.querySelector(".nt-modal-backdrop");
+
+  function randomLine() {
+    const lang = "en";
+    const arr = (NT_ICEPACKS_BY_LANG && NT_ICEPACKS_BY_LANG[lang]) ? NT_ICEPACKS_BY_LANG[lang] : [];
+    return arr[Math.floor(Math.random() * arr.length)] || "What’s something you’ve been quietly obsessed with recently?";
+  }
+
+  function open() {
+    txt.textContent = randomLine();
+    modal.classList.add("nt-modal-open");
+    modal.setAttribute("aria-hidden","false");
+  }
+  function hide() {
+    modal.classList.remove("nt-modal-open");
+    modal.setAttribute("aria-hidden","true");
+  }
+
+  btn.addEventListener("click", open);
+  close.addEventListener("click", hide);
+  back.addEventListener("click", hide);
+  next.addEventListener("click", () => txt.textContent = randomLine());
+}
+
+function initAppPage() {
+  const form = document.getElementById("nt-selection-form");
+  if (!form) return;
+
+  const selCountry = document.getElementById("sel-country");
+  const selNews = document.getElementById("sel-news-cat");
+  const selSocial = document.getElementById("sel-social-cat");
+  const scenarioRow = document.getElementById("scenario-row");
+  const summary = document.getElementById("stacks-summary");
+
+  // News DOM
+  const newsCard = document.getElementById("news-card");
+  const newsStatus = document.getElementById("news-stack-status");
+  const nSource = document.getElementById("news-source");
+  const nTime = document.getElementById("news-time");
+  const nTitle = document.getElementById("news-title");
+  const nSummary = document.getElementById("news-summary");
+  const nSafety = document.getElementById("news-safety");
+  const nAI = document.getElementById("news-ai-warning");
+  const nIce = document.getElementById("news-ice");
+  const nLink = document.getElementById("news-link");
+  const nCounter = document.getElementById("news-counter");
+
+  // Social DOM
+  const socialCard = document.getElementById("social-card");
+  const socialStatus = document.getElementById("social-stack-status");
+  const sSource = document.getElementById("social-source");
+  const sTime = document.getElementById("social-time");
+  const sTitle = document.getElementById("social-title");
+  const sSummary = document.getElementById("social-summary");
+  const sSafety = document.getElementById("social-safety");
+  const sAI = document.getElementById("social-ai-warning");
+  const sIce = document.getElementById("social-ice");
+  const sLink = document.getElementById("social-link");
+  const sCounter = document.getElementById("social-counter");
+
+  // Fill countries
+  selCountry.innerHTML = "";
+  Object.entries(NT_COUNTRY_CONFIG).forEach(([id,cfg]) => {
+    const o = document.createElement("option");
+    o.value = id;
+    o.textContent = cfg.label;
+    selCountry.appendChild(o);
+  });
+
+  // Preselect from URL
+  const params = new URLSearchParams(location.search);
+  const initCountry = params.get("country");
+  if (initCountry && NT_COUNTRY_CONFIG[initCountry]) selCountry.value = initCountry;
+
+  function fillCats() {
+    const cfg = NT_COUNTRY_CONFIG[selCountry.value];
+    selNews.innerHTML = "";
+    selSocial.innerHTML = "";
+
+    (cfg.newsCats||[]).forEach(c => {
+      const o = document.createElement("option");
+      o.value = c;
+      o.textContent = NT_CATEGORY_LABELS[c] || c;
+      selNews.appendChild(o);
+    });
+    (cfg.socialCats||[]).forEach(c => {
+      const o = document.createElement("option");
+      o.value = c;
+      o.textContent = NT_CATEGORY_LABELS[c] || c;
+      selSocial.appendChild(o);
+    });
+  }
+  fillCats();
+  selCountry.addEventListener("change", fillCats);
+
+  // Scenarios
+  scenarioRow.innerHTML = "";
+  NT_SCENARIOS.forEach(s => {
+    const b = document.createElement("button");
+    b.type="button";
+    b.className="nt-pill";
+    b.textContent = s[0].toUpperCase()+s.slice(1);
+    b.onclick = () => {
+      currentScenario = s;
+      [...scenarioRow.children].forEach(x => x.classList.toggle("nt-pill-active", x===b));
+    };
+    scenarioRow.appendChild(b);
+  });
+
+  function renderNews() {
+    if (!newsStack.length) {
+      newsStatus.textContent = "No cards loaded. Try another category.";
+      newsCard.style.visibility = "hidden";
+      nCounter.textContent = "0 / 0";
+      return;
     }
+    newsCard.style.visibility = "visible";
+    const a = newsStack[newsIndex];
+    const level = computeSafety(a._category, a);
+    const ai = isAiRelated(a);
 
-    const ice = pickIcebreaker(first, "event");
-    if (iceEl) iceEl.textContent = ice;
-  } catch (err) {
-    console.error("Global preview error", err);
-  }
-}
+    nSource.textContent = a.sourceName || "Source";
+    nTime.textContent = timeAgo(a.pubDate);
+    nTitle.textContent = clampText(a.title, 120);
+    nSummary.textContent = clampText(a.description, 320);
 
-/* ---------- BUILD STACKS ---------- */
+    nSafety.textContent = String(level);
+    nSafety.classList.remove("nt-safety-1","nt-safety-2","nt-safety-3");
+    nSafety.classList.add(safetyClass(level));
 
-async function buildStacks(e) {
-  if (e) e.preventDefault();
+    nAI.style.display = ai ? "block" : "none";
+    nAI.textContent = ai ? "AI can be polarizing — start light and read the vibe." : "";
 
-  const countrySel = qs("#sel-country");
-  const newsSel = qs("#sel-news-cat");
-  const socialSel = qs("#sel-social-cat");
-  if (!countrySel || !newsSel || !socialSel) return;
-
-  state.country = countrySel.value;
-  state.newsCategory = newsSel.value;
-  state.socialCategory = socialSel.value;
-
-  const region = ntGetRegionKeyForCountry(state.country);
-
-  const [newsArticles, socialArticles] = await Promise.all([
-    fetchNews(region, state.newsCategory),
-    fetchNews(region, state.socialCategory)
-  ]);
-
-  state.newsStack = enrichArticles(newsArticles, state.newsCategory);
-  state.socialStack = enrichArticles(socialArticles, state.socialCategory);
-  state.newsIndex = 0;
-  state.socialIndex = 0;
-
-  // Fallback if empty: inject one generic topic
-  if (!state.newsStack.length) {
-    state.newsStack = NT_TOPICS.map((t) => ({
-      title: t.title,
-      description: t.summary,
-      url: "#",
-      sourceName: t.sourceLabel || "Global trend",
-      pubDate: new Date().toISOString(),
-      _category: t.category || "trends",
-      _safety: 1,
-      _ai: false
-    }));
-  }
-  if (!state.socialStack.length) {
-    state.socialStack = state.newsStack.slice(0, 5);
+    nIce.textContent = pickIcebreaker(a, currentScenario);
+    nLink.href = a.url || "#";
+    nCounter.textContent = `${newsIndex+1} / ${newsStack.length}`;
+    newsStatus.textContent = "";
   }
 
-  renderStacksSummary();
-  renderStackCard("news");
-  renderStackCard("social");
-}
+  function renderSocial() {
+    if (!socialStack.length) {
+      socialStatus.textContent = "No cards loaded. Try another category.";
+      socialCard.style.visibility = "hidden";
+      sCounter.textContent = "0 / 0";
+      return;
+    }
+    socialCard.style.visibility = "visible";
+    const a = socialStack[socialIndex];
+    const level = computeSafety(a._category, a);
+    const ai = isAiRelated(a);
 
-/* ---------- INIT ---------- */
+    sSource.textContent = a.sourceName || "Source";
+    sTime.textContent = timeAgo(a.pubDate);
+    sTitle.textContent = clampText(a.title, 120);
+    sSummary.textContent = clampText(a.description, 320);
 
-function initNavigation() {
-  const heroStart = qs("#btn-hero-start");
-  const heroExamples = qs("#btn-hero-examples");
-  const backSelection = qs("#btn-back-selection");
+    sSafety.textContent = String(level);
+    sSafety.classList.remove("nt-safety-1","nt-safety-2","nt-safety-3");
+    sSafety.classList.add(safetyClass(level));
 
-  if (heroStart) {
-    heroStart.addEventListener("click", () => {
-      document.getElementById("app").scrollIntoView({ behavior: "smooth" });
-    });
+    sAI.style.display = ai ? "block" : "none";
+    sAI.textContent = ai ? "AI can be polarizing — start light and read the vibe." : "";
+
+    sIce.textContent = pickIcebreaker(a, currentScenario);
+    sLink.href = a.url || "#";
+    sCounter.textContent = `${socialIndex+1} / ${socialStack.length}`;
+    socialStatus.textContent = "";
   }
 
-  if (heroExamples) {
-    heroExamples.addEventListener("click", () => {
-      document.getElementById("world").scrollIntoView({ behavior: "smooth" });
-    });
+  async function buildStacks(countryId, newsCat, socialCat) {
+    newsStatus.textContent = "Loading…";
+    socialStatus.textContent = "Loading…";
+    newsCard.style.visibility = "hidden";
+    socialCard.style.visibility = "hidden";
+
+    try {
+      const [r1, r2] = await Promise.all([
+        fetch(`${NT_API_BASE}/api/news?region=${encodeURIComponent(countryId)}&category=${encodeURIComponent(newsCat)}`),
+        fetch(`${NT_API_BASE}/api/news?region=${encodeURIComponent(countryId)}&category=${encodeURIComponent(socialCat)}`)
+      ]);
+      const j1 = await r1.json();
+      const j2 = await r2.json();
+
+      newsStack = (j1.articles || []).slice(0, 30).map(a => ({...a, _category: newsCat}));
+      socialStack = (j2.articles || []).slice(0, 30).map(a => ({...a, _category: socialCat}));
+
+      newsIndex = 0; socialIndex = 0;
+      renderNews(); renderSocial();
+
+    } catch (e) {
+      console.error(e);
+      newsStatus.textContent = "Failed to load. Try again.";
+      socialStatus.textContent = "Failed to load. Try again.";
+    }
   }
 
-  if (backSelection) {
-    backSelection.addEventListener("click", () => {
-      const selPanel = qs(".nt-selection-panel");
-      if (selPanel) selPanel.scrollIntoView({ behavior: "smooth" });
-    });
-  }
-}
+  // Swipe controls
+  attachSwipe(
+    newsCard,
+    () => { if(!newsStack.length) return; newsIndex=(newsIndex+1)%newsStack.length; slide(newsCard,+1,renderNews); },
+    () => { if(!newsStack.length) return; newsIndex=(newsIndex-1+newsStack.length)%newsStack.length; slide(newsCard,-1,renderNews); }
+  );
+  attachSwipe(
+    socialCard,
+    () => { if(!socialStack.length) return; socialIndex=(socialIndex+1)%socialStack.length; slide(socialCard,+1,renderSocial); },
+    () => { if(!socialStack.length) return; socialIndex=(socialIndex-1+socialStack.length)%socialStack.length; slide(socialCard,-1,renderSocial); }
+  );
 
-function initCardsNavigation() {
-  const newsPrev = qs("#news-prev");
-  const newsNext = qs("#news-next");
-  const socialPrev = qs("#social-prev");
-  const socialNext = qs("#social-next");
+  setupPanic();
 
-  if (newsPrev)
-    newsPrev.addEventListener("click", () => {
-      if (!state.newsStack.length) return;
-      state.newsIndex = Math.max(0, state.newsIndex - 1);
-      renderStackCard("news");
-    });
-  if (newsNext)
-    newsNext.addEventListener("click", () => {
-      if (!state.newsStack.length) return;
-      state.newsIndex = Math.min(state.newsStack.length - 1, state.newsIndex + 1);
-      renderStackCard("news");
-    });
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const countryId = selCountry.value;
+    const newsCat = selNews.value;
+    const socialCat = selSocial.value;
 
-  if (socialPrev)
-    socialPrev.addEventListener("click", () => {
-      if (!state.socialStack.length) return;
-      state.socialIndex = Math.max(0, state.socialIndex - 1);
-      renderStackCard("social");
-    });
-  if (socialNext)
-    socialNext.addEventListener("click", () => {
-      if (!state.socialStack.length) return;
-      state.socialIndex = Math.min(state.socialStack.length - 1, state.socialIndex + 1);
-      renderStackCard("social");
-    });
-}
+    summary.textContent =
+      `${NT_COUNTRY_CONFIG[countryId].label} · News: ${NT_CATEGORY_LABELS[newsCat]||newsCat} · Social: ${NT_CATEGORY_LABELS[socialCat]||socialCat}` +
+      (currentScenario ? ` · Scenario: ${scenarioLabel(currentScenario)}` : "");
 
-/* ---------- LANG + FOOTER ---------- */
-
-function initLanguage() {
-  const toggle = qs("#nt-lang-toggle");
-  const footerLang = qs("#footer-lang");
-  if (!toggle || !footerLang) return;
-
-  footerLang.textContent = ntGetFooterLanguageLabel(state.language);
-
-  toggle.addEventListener("click", () => {
-    state.language = state.language === "en" ? "ar" : "en";
-    document.documentElement.dir = NT_RTL_LANGS.includes(state.language) ? "rtl" : "ltr";
-    footerLang.textContent = ntGetFooterLanguageLabel(state.language);
+    buildStacks(countryId, newsCat, socialCat);
   });
 }
 
-/* ---------- ENTRY ---------- */
+// ---------- boot ----------
+document.addEventListener("DOMContentLoaded", () => {
+  setupWorldMap();
+  loadGlobalPreview();
+  initAppPage();
 
-function initApp() {
-  initNavigation();
-  populateDropdowns();
-  initScenarioPills();
-  initWorldMap();
-  initGlobalPreview();
-  initPanicModal();
-  initCardsNavigation();
-  initLanguage();
-
-  const form = qs("#nt-selection-form");
-  if (form) {
-    form.addEventListener("submit", buildStacks);
+  const footerLang = document.getElementById("footer-lang");
+  if (footerLang && typeof ntGetFooterLanguageLabel === "function") {
+    footerLang.textContent = ntGetFooterLanguageLabel("en");
   }
-}
-
-document.addEventListener("DOMContentLoaded", initApp);
+});
