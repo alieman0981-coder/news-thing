@@ -191,24 +191,36 @@ a{color:inherit;text-decoration:none}
 .nt-card-meta{color:var(--muted);font-weight:700;font-size:.9rem}
 .nt-card-dot{margin:0 6px;opacity:.6}
 .nt-card-title{
-  margin:10px 0 6px;
-  font-size:1.28rem;
-  letter-spacing:-.02em;
+  margin:10px 0 8px;
+  font-size:1.42rem;          /* bigger */
+  font-weight:1000;           /* heavier */
+  letter-spacing:-.03em;
+  line-height:1.15;
+  color:#111;
+  padding:10px 12px;
+  border-radius:14px;
+
+  /* subtle “highlight bar” look */
+  background: linear-gradient(90deg, rgba(255,212,0,.25), rgba(255,255,255,0));
+  border: 1px solid rgba(0,0,0,.08);
+
   overflow:hidden;
   display:-webkit-box;
   -webkit-box-orient:vertical;
   -webkit-line-clamp:3;
 }
+
 .nt-card-summary{
   margin:0;
-  color:var(--muted);
-  line-height:1.5;
+  color:rgba(0,0,0,.66);
+  line-height:1.55;
   flex:1 1 auto;
   overflow:hidden;
   display:-webkit-box;
   -webkit-box-orient:vertical;
   -webkit-line-clamp:7;
 }
+
 .ai-caution{
   margin-top:8px;
   padding:10px 12px;
